@@ -27,26 +27,34 @@ public class ServerListSyncClient implements ClientModInitializer {
     public static Thread updateThread = new Thread(() -> {
         final Logger threadLogger = LoggerFactory.getLogger("ServerList-Sync-Thread");
         while (true) {
+            threadLogger.info("Downloading server information ...");
+            try {
+                JsonObject result = HttpUtil.get();
+                if (result.get("error") == null) {
+                    try {
+                        ServerListSync.serverInfosJson.clear();
+                        for (JsonElement element : result.getAsJsonArray("servers")) {
+                            ServerListSync.serverInfosJson.add(element);
+                        }
+                        synchronized (serverInfos) { serverInfos.clear(); }
+                        updateServerInfos();
+                    } catch (Exception e) {
+                        threadLogger.error("Error occurred while parsing server information: {} ; Exception: {}", new Gson().toJson(result), e);
+                    }
+                } else {
+                    threadLogger.error("Error occurred while downloading server information: {}", new Gson().toJson(result));
+                }
+            } catch (Exception e) {
+                threadLogger.error("Error occurred while parsing server information: Exception: {}", e);
+            }
+
+            // Updated once, never again
+            if(SLSConfig.updatePeriod < 0) break;
+
             try {
                 Thread.sleep(1000L * SLSConfig.updatePeriod);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
-            }
-            threadLogger.info("Downloading server information ...");
-            JsonObject result = HttpUtil.get();
-            if (result.get("error") == null) {
-                try {
-                    ServerListSync.serverInfosJson.clear();
-                    for (JsonElement element : result.getAsJsonArray("servers")) {
-                        ServerListSync.serverInfosJson.add(element);
-                    }
-                    synchronized (serverInfos) { serverInfos.clear(); }
-                    updateServerInfos();
-                } catch (Exception e) {
-                    threadLogger.error("Error occurred while parsing server information: {} ; Exception: {}", new Gson().toJson(result), e);
-                }
-            } else {
-                threadLogger.error("Error occurred while downloading server information: {}", new Gson().toJson(result));
             }
         }
     }, "ServerList-Sync-Thread");
