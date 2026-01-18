@@ -56,9 +56,12 @@ public abstract class ServerListMixin {
 		if (SLSConfig.order.equals(ServerOrder.RANDOM)) {
 			Collections.shuffle(serverInfos);
 		}
-		serverInfos.forEach(serverInfo -> servers.removeIf(origin -> Objects.equals(origin.address, serverInfo.address)));
-		for (ServerInfo serverInfo : serverInfos) {
-			servers.add(new ServerInfo(serverInfo.name, serverInfo.address, serverInfo.getServerType()));
-		}
+        
+        if(!serverInfos.isEmpty()) {
+            servers.clear();
+            for (ServerInfo serverInfo : serverInfos) {
+                servers.add(new ServerInfo(serverInfo.name, serverInfo.address, serverInfo.isLocal()));
+            }
+        }
 	}
 }
