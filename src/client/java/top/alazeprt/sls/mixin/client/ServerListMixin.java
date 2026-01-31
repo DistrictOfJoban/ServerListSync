@@ -60,7 +60,7 @@ public abstract class ServerListMixin {
         if(!serverInfos.isEmpty()) {
             servers.clear();
             for (ServerInfo serverInfo : serverInfos) {
-                servers.add(new ServerInfo(serverInfo.name, serverInfo.address, serverInfo.isLocal()));
+                servers.add(new ServerInfo(serverInfo.name, serverInfo.address, ServerInfo.ServerType.LAN));
             }
         }
 	}
